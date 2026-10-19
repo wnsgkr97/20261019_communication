@@ -1,0 +1,1542 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>커뮤니케이션 퀘스트 - 의사소통 시뮬레이션</title>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --secondary: #06b6d4;
+            --bg-dark: #0f172a;
+            --panel-bg: #1e293b;
+            --card-bg: #334155;
+            --card-hover: #475569;
+            --text-light: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent-green: #10b981;
+            --accent-yellow: #f59e0b;
+            --accent-red: #ef4444;
+            --border-color: #475569;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 12px;
+            overflow-x: hidden;
+        }
+
+        #app-container {
+            width: 100%;
+            max-width: 900px;
+            background-color: var(--panel-bg);
+            border-radius: 20px;
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5), 0 8px 10px -6px rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,255,255,0.1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            min-height: 680px;
+            position: relative;
+        }
+
+        /* Header UI */
+        .app-header {
+            background-color: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(8px);
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            z-index: 10;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .header-controls {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .btn-icon {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-light);
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 18px;
+        }
+
+        .btn-icon:hover {
+            background: var(--card-hover);
+            transform: translateY(-2px);
+        }
+
+        /* View Containers */
+        .view {
+            display: none;
+            flex: 1;
+            padding: 24px;
+            flex-direction: column;
+            animation: fadeIn 0.3s ease-in-out;
+            overflow-y: auto;
+        }
+
+        .view.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Title Screen */
+        .title-screen {
+            text-align: center;
+            justify-content: center;
+            align-items: center;
+            gap: 24px;
+            padding: 40px 20px;
+        }
+
+        .main-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #a5b4fc, #38bdf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            max-width: 600px;
+            line-height: 1.6;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), #6366f1);
+            color: white;
+            border: none;
+            padding: 14px 32px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 12px;
+            cursor: pointer;
+            box-shadow: 0 4px 14px rgba(79, 70, 229, 0.4);
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(79, 70, 229, 0.6);
+        }
+
+        .btn-secondary {
+            background: var(--card-bg);
+            color: var(--text-light);
+            border: 1px solid var(--border-color);
+            padding: 10px 20px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-secondary:hover {
+            background: var(--card-hover);
+        }
+
+        /* Episode Selector */
+        .ep-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 16px;
+            margin-top: 20px;
+        }
+
+        .ep-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.25s;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            gap: 12px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .ep-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--primary);
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3);
+        }
+
+        .ep-badge {
+            align-self: flex-start;
+            background: rgba(79, 70, 229, 0.2);
+            color: #a5b4fc;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 700;
+        }
+
+        .ep-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+
+        .ep-desc {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+        }
+
+        .ep-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 8px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        /* Simulation Canvas & Stage UI */
+        .sim-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--card-bg);
+            padding: 12px 18px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+        }
+
+        .affection-bar-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .affection-bar {
+            width: 140px;
+            height: 12px;
+            background: #1e293b;
+            border-radius: 6px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+
+        .affection-fill {
+            height: 100%;
+            width: 50%;
+            background: linear-gradient(90deg, #ec4899, #f43f5e);
+            transition: width 0.5s ease;
+        }
+
+        .stage-box {
+            position: relative;
+            background: #000;
+            border-radius: 16px;
+            height: 240px;
+            overflow: hidden;
+            margin-bottom: 16px;
+            border: 1px solid var(--border-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #avatarCanvas {
+            width: 100%;
+            height: 100%;
+        }
+
+        .dialog-bubble {
+            position: absolute;
+            bottom: 16px;
+            left: 16px;
+            right: 16px;
+            background: rgba(15, 23, 42, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 14px 18px;
+            color: #fff;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+        }
+
+        .speaker-name {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--secondary);
+            margin-bottom: 4px;
+        }
+
+        .dialog-text {
+            font-size: 1rem;
+            line-height: 1.4;
+        }
+
+        /* Choice Section */
+        .choices-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .choice-btn {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 12px 16px;
+            color: var(--text-light);
+            text-align: left;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            line-height: 1.4;
+        }
+
+        .choice-btn:hover {
+            background-color: var(--card-hover);
+            border-color: var(--primary);
+            transform: translateX(4px);
+        }
+
+        .choice-num {
+            background: rgba(255,255,255,0.1);
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: 700;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .guide-box {
+            background: rgba(6, 182, 212, 0.1);
+            border: 1px solid rgba(6, 182, 212, 0.3);
+            border-radius: 10px;
+            padding: 10px 14px;
+            font-size: 0.85rem;
+            color: #a5f3fc;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Modal Overlay for Feedback */
+        .modal-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(6px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            padding: 20px;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-card {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 18px;
+            max-width: 500px;
+            width: 100%;
+            padding: 24px;
+            text-align: center;
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5);
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes popIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .rating-tag {
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-weight: 800;
+            font-size: 1.1rem;
+            margin-bottom: 12px;
+        }
+
+        .rating-Perfect { background: rgba(16, 185, 129, 0.2); color: var(--accent-green); border: 1px solid var(--accent-green); }
+        .rating-Good { background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid #60a5fa; }
+        .rating-Neutral { background: rgba(245, 158, 11, 0.2); color: var(--accent-yellow); border: 1px solid var(--accent-yellow); }
+        .rating-Poor { background: rgba(249, 115, 22, 0.2); color: #fb923c; border: 1px solid #fb923c; }
+        .rating-Bad { background: rgba(239, 68, 68, 0.2); color: var(--accent-red); border: 1px solid var(--accent-red); }
+
+        .score-change {
+            font-size: 1rem;
+            margin-bottom: 16px;
+            color: var(--text-muted);
+        }
+
+        .feedback-text {
+            background: var(--card-bg);
+            padding: 16px;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            margin-bottom: 20px;
+            text-align: left;
+            border-left: 4px solid var(--primary);
+        }
+
+        /* Ending & Result Screen */
+        .result-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .ending-badge {
+            font-size: 3rem;
+            margin-bottom: 10px;
+        }
+
+        /* History Modal */
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 12px;
+            text-align: left;
+        }
+
+        .history-item {
+            background: var(--card-bg);
+            padding: 12px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        @media (max-width: 640px) {
+            #app-container { min-height: 100vh; border-radius: 0; }
+            body { padding: 0; }
+            .stage-box { height: 200px; }
+            .dialog-text { font-size: 0.9rem; }
+            .choice-btn { font-size: 0.85rem; padding: 10px 12px; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="app-container">
+    <!-- Header -->
+    <header class="app-header">
+        <div class="logo">
+            <div class="logo-icon">💬</div>
+            <span>커뮤니케이션 퀘스트</span>
+        </div>
+        <div class="header-controls">
+            <button class="btn-icon" id="soundToggleBtn" title="음소거 설정">🔊</button>
+            <button class="btn-icon" id="historyBtn" title="학습 기록 리포트">📜</button>
+            <button class="btn-icon" id="homeBtn" title="메인 메뉴">🏠</button>
+        </div>
+    </header>
+
+    <!-- VIEW 1: Title Screen -->
+    <section id="titleView" class="view active title-screen">
+        <div>
+            <h1 class="main-title">커뮤니케이션 퀘스트</h1>
+            <p class="subtitle">드라마·영화 속 갈등 상황을 '나-전달법'과 '공감적 경청하기'로 지혜롭게 해결해 보세요.</p>
+        </div>
+        <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+            <button class="btn-primary" onclick="app.showView('episodeView')">
+                <span>게임 시작하기</span> ▶
+            </button>
+            <button class="btn-secondary" onclick="app.openGuideModal()">
+                💡 대화법 가이드 보기
+            </button>
+        </div>
+    </section>
+
+    <!-- VIEW 2: Episode Selector -->
+    <section id="episodeView" class="view">
+        <h2 style="margin-bottom: 8px;">🎬 에피소드 선택</h2>
+        <p style="color: var(--text-muted); margin-bottom: 20px;">연속된 3개의 상황으로 구성된 스토리를 선택하세요.</p>
+        <div class="ep-grid" id="episodeGrid"></div>
+    </section>
+
+    <!-- VIEW 3: Simulation Gameplay -->
+    <section id="simView" class="view">
+        <div class="sim-header">
+            <div>
+                <span id="simEpTitle" style="font-weight: 700; color: #a5b4fc; font-size: 0.9rem;">Ep 1</span>
+                <span id="simSceneStep" style="margin-left: 8px; font-size: 0.85rem; color: var(--text-muted);">Scene 1/3</span>
+            </div>
+            <div class="affection-bar-container">
+                <span style="font-size: 0.85rem; font-weight: 600;">호감도</span>
+                <div class="affection-bar">
+                    <div id="affectionFill" class="affection-fill"></div>
+                </div>
+                <span id="affectionText" style="font-size: 0.85rem; font-weight: 700;">60</span>
+            </div>
+        </div>
+
+        <!-- Visual Stage with Canvas -->
+        <div class="stage-box">
+            <canvas id="avatarCanvas"></canvas>
+            <div class="dialog-bubble">
+                <div class="speaker-name" id="speakerName">등장인물</div>
+                <div class="dialog-text" id="speakerDialog">대사가 여기에 표시됩니다.</div>
+            </div>
+        </div>
+
+        <!-- Choices -->
+        <div class="choices-container" id="choicesContainer"></div>
+
+        <div class="guide-box">
+            <span>💡</span>
+            <span id="tipText">나-전달법: [행동] ➔ [영향] ➔ [감정] ➔ [바라는 점] 요소가 균형 있게 포함되어 있는지 확인하세요.</span>
+        </div>
+    </section>
+
+    <!-- VIEW 4: Episode Result Screen -->
+    <section id="resultView" class="view" style="text-align: center; justify-content: center;">
+        <div class="result-card">
+            <div class="ending-badge" id="endingBadge">🏆</div>
+            <h2 id="endingTitle" style="font-size: 1.8rem; margin-bottom: 10px;">에피소드 클리어!</h2>
+            <p id="endingDesc" style="color: var(--text-muted); margin-bottom: 20px; line-height: 1.5;">성공적으로 갈등을 해소했습니다.</p>
+            
+            <div style="display: flex; justify-content: center; gap: 20px; margin-bottom: 24px;">
+                <div style="background: rgba(0,0,0,0.2); padding: 12px 20px; border-radius: 12px;">
+                    <div style="font-size: 0.8rem; color: var(--text-muted);">총점</div>
+                    <div id="finalScore" style="font-size: 1.5rem; font-weight: 800; color: var(--secondary);">280점</div>
+                </div>
+                <div style="background: rgba(0,0,0,0.2); padding: 12px 20px; border-radius: 12px;">
+                    <div style="font-size: 0.8rem; color: var(--text-muted);">최종 호감도</div>
+                    <div id="finalAffection" style="font-size: 1.5rem; font-weight: 800; color: #ec4899;">90점</div>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 12px; justify-content: center;">
+                <button class="btn-secondary" onclick="app.showView('episodeView')">목록으로</button>
+                <button class="btn-primary" onclick="app.restartEpisode()">다시 시도하기</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Modal: Feedback -->
+    <div class="modal-overlay" id="feedbackModal">
+        <div class="modal-card">
+            <div id="ratingTag" class="rating-tag rating-Perfect">Perfect</div>
+            <div id="scoreChangeText" class="score-change">+100점 / 호감도 +20</div>
+            <div id="feedbackBody" class="feedback-text">피드백 내용</div>
+            <button class="btn-primary" style="width: 100%; justify-content: center;" onclick="app.nextScene()">다음 단계로 진행 ➔</button>
+        </div>
+    </div>
+
+    <!-- Modal: Guide -->
+    <div class="modal-overlay" id="guideModal">
+        <div class="modal-card" style="text-align: left;">
+            <h3 style="margin-bottom: 12px; font-size: 1.3rem; color: var(--secondary);">📘 대화법 가이드</h3>
+            <div style="font-size: 0.9rem; line-height: 1.6; margin-bottom: 16px; color: var(--text-light);">
+                <strong style="color: #a5b4fc;">1. 나-전달법 (I-Message) 4단계</strong><br>
+                • <strong>행동:</strong> 상대방 행동에 대한 비난 없는 객관적 묘사<br>
+                • <strong>영향:</strong> 나에게 미치는 구체적인 영향/결과<br>
+                • <strong>감정:</strong> 느껴지는 나 솔직한 감정<br>
+                • <strong>바라는 점:</strong> 구체적인 행동 요청<br><br>
+                <strong style="color: #a5b4fc;">2. 공감적 경청하기</strong><br>
+                상대방의 말을 주의 깊게 듣고 경청하며 적절한 반응(고개 끄덕임, 감정 반영 등)을 보이는 대화 기술입니다.
+            </div>
+            <button class="btn-primary" style="width: 100%; justify-content: center;" onclick="document.getElementById('guideModal').classList.remove('active')">닫기</button>
+        </div>
+    </div>
+
+    <!-- Modal: History / Report -->
+    <div class="modal-overlay" id="historyModal">
+        <div class="modal-card" style="text-align: left;">
+            <h3 style="margin-bottom: 12px; font-size: 1.3rem; color: var(--secondary);">📜 나의 학습 리포트</h3>
+            <div id="historyContainer" class="history-list"></div>
+            <button class="btn-primary" style="width: 100%; justify-content: center; margin-top: 16px;" onclick="document.getElementById('historyModal').classList.remove('active')">닫기</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// 1. Audio Synthesizer via Web Audio API
+class SoundEngine {
+    constructor() {
+        this.ctx = null;
+        this.muted = false;
+    }
+
+    init() {
+        if (!this.ctx) {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            this.ctx = new AudioContext();
+        }
+    }
+
+    playBeep(freq, duration, type = 'sine') {
+        if (this.muted) return;
+        this.init();
+        try {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+            gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start();
+            osc.stop(this.ctx.currentTime + duration);
+        } catch (e) {
+            console.warn('Audio play failed', e);
+        }
+    }
+
+    playSuccess() {
+        if (this.muted) return;
+        this.playBeep(523.25, 0.1); // C5
+        setTimeout(() => this.playBeep(659.25, 0.1), 100); // E5
+        setTimeout(() => this.playBeep(783.99, 0.25), 200); // G5
+    }
+
+    playBad() {
+        if (this.muted) return;
+        this.playBeep(220, 0.15, 'sawtooth');
+        setTimeout(() => this.playBeep(196, 0.25, 'sawtooth'), 150);
+    }
+}
+
+const audio = new SoundEngine();
+
+// 2. Scenario Data
+const episodesData = [
+    {
+        id: 1,
+        genre: "청춘 학원물",
+        title: "팀 프로젝트와 책임감",
+        desc: "지각한 민수와의 갈등을 해결하고 연속된 협력 상황을 이끌어가세요.",
+        npc: "민수",
+        color: "#3b82f6",
+        scenes: [
+            {
+                step: 1,
+                title: "발생: 지각",
+                dialog: "아 미안, 늦잠 잤어... 너희가 내 파트 좀 대신 발표해 주면 안 돼?",
+                emotion: "anxious",
+                choices: [
+                    {
+                        text: "민수야, 발표 당일에 연락 없이 늦어서(행동) 자료 정리에 차질이 생겼고(영향) 솔직히 당황스럽고 속상해(감정). 다음부터는 늦을 것 같으면 미리 연락해 줬으면 좋겠어(바라는 점).",
+                        grade: "Perfect", score: 100, aff: 20,
+                        feedback: "나-전달법의 4요소(행동, 영향, 감정, 바라는 점)를 명확하고 완벽하게 사용하였습니다."
+                    },
+                    {
+                        text: "연락도 없이 늦으니까 진짜 당황스럽다. 다음엔 늦지 말고 미리 연락해 줘.",
+                        grade: "Good", score: 80, aff: 10,
+                        feedback: "긍정적인 의도이나 '영향' 요소가 다소 미흡하게 표현되었습니다."
+                    },
+                    {
+                        text: "알았어. 일단 제출은 해야 하니까 네 파트 우리가 나눠서 발표할게.",
+                        grade: "Neutral", score: 50, aff: 0,
+                        feedback: "상황 처리 위주의 건조한 반응으로 감정 교류가 부족합니다."
+                    },
+                    {
+                        text: "아 몰라, 네 파트니까 네가 알아서 선생님한테 가서 설명해.",
+                        grade: "Poor", score: 20, aff: -10,
+                        feedback: "문제 해결을 회피하는 방관적인 태도입니다."
+                    },
+                    {
+                        text: "너는 매번 이런 식이야! 개념이 있는 거야? 알아서 네가 발표하든가 말든가 해!",
+                        grade: "Bad", score: 0, aff: -20,
+                        feedback: "상대방을 인격적으로 공격하는 너-전달법(Bad) 대사입니다."
+                    }
+                ]
+            },
+            {
+                step: 2,
+                title: "심화: 친구들의 오해",
+                dialog: "아까 다들 나 때문에 표정 안 좋던데... 어차피 너네 나 빼고 뒷풀이 갈 거잖아?",
+                emotion: "sad",
+                choices: [
+                    {
+                        text: "(민수 옆에 앉아 눈을 맞추며) 오늘 일이 있어서 다들 피곤해진 건 사실이지만, 너를 따돌리려는 건 아니야. 그렇게 생각했다니 너도 마음이 불편했겠구나.",
+                        grade: "Perfect", score: 100, aff: 20,
+                        feedback: "상대방의 불편한 감정을 공감적 경청으로 깊이 경청 및 반영해 주었습니다."
+                    },
+                    {
+                        text: "아냐, 우리 너 따돌리는 거 아니야. 너무 마음에 두지 마.",
+                        grade: "Good", score: 80, aff: 10,
+                        feedback: "수용적인 대화 태도이나 감정 공감 요소가 조금 얕습니다."
+                    },
+                    {
+                        text: "다들 지쳐서 그런 거니까 그냥 앉아서 음료수나 마셔.",
+                        grade: "Neutral", score: 50, aff: 0,
+                        feedback: "지치고 피곤한 상황만 언급하여 서운함을 어루만지지 못했습니다."
+                    },
+                    {
+                        text: "네가 늦어놓고 왜 우리가 눈치 봐야 해? 나중에 얘기하자.",
+                        grade: "Poor", score: 20, aff: -10,
+                        feedback: "상대의 방어 태도에 똑같이 차갑게 반응하는 대화입니다."
+                    },
+                    {
+                        text: "피해의식 대박이다. 늦은 건 너인데 왜 적반하장으로 나와?",
+                        grade: "Bad", score: 0, aff: -20,
+                        feedback: "상대의 불안감을 비난하여 관계를 악화시킵니다."
+                    }
+                ]
+            },
+            {
+                step: 3,
+                title: "해소: 두 번째 기회",
+                dialog: "이번 2차 발표는 내가 자료 조사를 다 해올게. 나한테 한 번만 더 기회를 주라.",
+                emotion: "hopeful",
+                choices: [
+                    {
+                        text: "먼저 책임감 있게 제안해 줘서 고마워. 다만 혼자 다 맡으면 너도 부담될 수 있으니, 분량을 나눠서 진행 현황을 공유해 주면 좋겠어.",
+                        grade: "Perfect", score: 100, aff: 20,
+                        feedback: "상대의 의욕을 존중하면서도 현실적이고 합리적인 가이드(I-Message)를 제시했습니다."
+                    },
+                    {
+                        text: "다시 의욕을 내줘서 고마워. 이번엔 잘 해보자!",
+                        grade: "Good", score: 80, aff: 10,
+                        feedback: "격려의 표현은 좋으나 피드백의 구체성이 다소 부족합니다."
+                    },
+                    {
+                        text: "알았어. 그럼 자료 조사 파트는 너한테 맡길게.",
+                        grade: "Neutral", score: 50, aff: 0,
+                        feedback: "지나치게 수동적이며 협업적인 피드백이 생략되었습니다."
+                    },
+                    {
+                        text: "음... 일단 네가 해보고 모자라면 나중에 내가 보완할게.",
+                        grade: "Poor", score: 20, aff: -10,
+                        feedback: "상대방에 대한 불신을 밑바탕에 깔고 있는 무미건조한 반응입니다."
+                    },
+                    {
+                        text: "또 펑크 내려고? 차라리 네가 아무것도 안 하는 게 우리한테 도와주는 거야.",
+                        grade: "Bad", score: 0, aff: -20,
+                        feedback: "과거 실수를 꺼내 상대의 노력을 전면 부정하는 비난조 대사입니다."
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        id: 2,
+        genre: "가족/일상 드라마",
+        title: "서운함과 선 넘는 부탁",
+        desc: "지은이의 무리한 부탁과 거절 이후의 냉기류를 지혜롭게 대화로 해소하세요.",
+        npc: "지은",
+        color: "#ec4899",
+        scenes: [
+            {
+                step: 1,
+                title: "발생: 무리한 요구",
+                dialog: "너 이번 주말에 노트 정리한 것 좀 다 찍어서 보내주라. 너 어차피 주말에 별일 없잖아?",
+                emotion: "demanding",
+                choices: [
+                    {
+                        text: "주말마다 노트 전량을 요구받으면(행동), 내 공부 계획이 차질을 빚고(영향) 솔직히 부담스럽고 난감해(감정). 정 필요한 부분만 적어서 물어봐 줬으면 좋겠어(바라는 점).",
+                        grade: "Perfect", score: 100, aff: 20,
+                        feedback: "나-전달법 4요소를 활용해 부드럽지만 단호하게 솔직한 감정과 대안을 제시했습니다."
+                    },
+                    {
+                        text: "계속 노트를 보여달라고 하니까 사실 좀 부담스러워. 이번에는 각자 공부하는 게 어떨까?",
+                        grade: "Good", score: 80, aff: 10,
+                        feedback: "부담감을 거절 의사와 함께 정중히 전달한 괜찮은 대화입니다."
+                    },
+                    {
+                        text: "주말엔 나도 바빠서 못 보내줘. 학교 가서 봐.",
+                        grade: "Neutral", score: 50, aff: 0,
+                        feedback: "감정에 대한 설명 없이 단호한 결론만 전해 건조합니다."
+                    },
+                    {
+                        text: "어... 글쎄, 주말에 시간 될지 모르겠는데... 나중에 생각해 볼게.",
+                        grade: "Poor", score: 20, aff: -10,
+                        feedback: "우유부단하여 상대에게 잘못된 기대를 주거나 오해를 만들 수 있습니다."
+                    },
+                    {
+                        text: "넌 내가 네 셔틀이야? 내가 힘들게 정리한 걸 왜 당연하다는 듯이 바래?",
+                        grade: "Bad", score: 0, aff: -20,
+                        feedback: "감정을 공격적인 언어로 분출하는 나쁜 대화 형태입니다."
+                    }
+                ]
+            },
+            {
+                step: 2,
+                title: "심화: 오해와 냉대",
+                dialog: "너 요새 되게 까칠해진 거 알아? 단톡방에서도 사람 말 무시하고.",
+                emotion: "angry",
+                choices: [
+                    {
+                        text: "지은아, 그렇게 느끼게 했다면 미안해. 다만 내 거절 때문에 서운해서 너와 나 사이에 오해가 생긴 것 같아 걱정스럽고 마음이 아파. 솔직하게 대화하고 싶어.",
+                        grade: "Perfect", score: 100, aff: 20,
+                        feedback: "상대의 서운함을 공감하면서 오해를 풀고자 하는 진솔한 마음을 나-전달법으로 표현했습니다."
+                    },
+                    {
+                        text: "너한테 나쁜 뜻은 없었어. 무시하려던 게 아니라 오해한 거야.",
+                        grade: "Good", score: 80, aff: 10,
+                        feedback: "변명보다는 적극적 공감 요소가 더해지면 한층 더 상냥했을 대사입니다."
+                    },
+                    {
+                        text: "단톡방 메시지가 많아서 못 본 것 뿐이야. 너무 신경 쓰지 마.",
+                        grade: "Neutral", score: 50, aff: 0,
+                        feedback: "단순 상황 해명에 그쳐 서운함에 대한 감정 케어가 빠져 있습니다."
+                    },
+                    {
+                        text: "네가 그렇게 느끼면 어쩔 수 없지... 당분간 서로 조심하자.",
+                        grade: "Poor", score: 20, aff: -10,
+                        feedback: "대화를 체념하고 거리를 두려는 회피성 태도입니다."
+                    },
+                    {
+                        text: "너야말로 부탁 거절당했다고 단톡방에서 티 내는 거 안 부끄럽냐?",
+                        grade: "Bad", score: 0, aff: -20,
+                        feedback: "상대를 비꼬고 적대심을 드러내는 공격적인 대화입니다."
+                    }
+                ]
+            },
+            {
+                step: 3,
+                title: "해소: 건강한 거리의 우정",
+                dialog: "사실 네가 거절해서 나를 친구로 안 생각하는 줄 알았어... 내가 너무 떼썼나 봐.",
+                emotion: "sad",
+                choices: [
+                    {
+                        text: "(손을 잡으며) 네 말을 들으니 내 거절 때문에 마음이 많이 상했었겠구나. 그렇지만 난 여전히 너랑 친하게 지내고 싶어. 서로 부담 주지 않는 선에서 도와주자.",
+                        grade: "Perfect", score: 100, aff: 20,
+                        feedback: "공감적 경청과 수용을 통해 관계를 유연하게 정립하는 최고의 반응입니다."
+                    },
+                    {
+                        text: "너랑 멀어지려고 한 게 아니었어. 마음 상하게 해서 미안해.",
+                        grade: "Good", score: 80, aff: 10,
+                        feedback: "사과와 긍정적인 메시지가 전달되는 유용한 답변입니다."
+                    },
+                    {
+                        text: "알았으면 됐어. 다음부터는 서로 선을 지키면 되지.",
+                        grade: "Neutral", score: 50, aff: 0,
+                        feedback: "상대방의 용기 있는 사과에 비해 다소 훈계조의 서먹한 말투입니다."
+                    },
+                    {
+                        text: "지나간 일이니까 그냥 잊자. 나도 더 이상 얘기 안 할게.",
+                        grade: "Poor", score: 20, aff: -10,
+                        feedback: "대화를 서둘러 정리하려는 소극적 태도입니다."
+                    },
+                    {
+                        text: "이제야 깨달았니? 앞으로는 다시는 그런 어이없는 부탁 하지 마.",
+                        grade: "Bad", score: 0, aff: -20,
+                        feedback: "상대의 성찰을 묵살하고 재차 비난하는 잘못된 대사입니다."
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        id: 3,
+        genre: "학원/감성 드라마",
+        title: "좌절과 분노의 대화",
+        desc: "시험 실패로 절망에 빠진 태양이의 말을 깊이 경청하고 재기를 도와주세요.",
+        npc: "태양",
+        color: "#f59e0b",
+        scenes: [
+            {
+                step: 1,
+                title: "발생: 시험을 망친 후",
+                dialog: "아 진짜 짜증 나! 열심히 해봤자 아무 소용없어. 선생님도 날 미워하는 게 분명해!",
+                emotion: "angry",
+                choices: [
+                    {
+                        text: "(태양의 진정을 기다린 후) 정말 밤새워 준비했는데 원하는 결과가 안 나와서 너무 화나고 속상하겠다. 선생님마저 서운하게 느껴질 정도라니 마음이 무겁겠어.",
+                        grade: "Perfect", score: 100, aff: 20,
+                        feedback: "상대의 폭발하는 분노 뒤에 숨은 절망감을 정확히 읽어주고 공감적 경청을 해주었습니다."
+                    },
+                    {
+                        text: "진짜 속상하겠다. 노력한 만큼 안 나와서 화가 많이 났구나.",
+                        grade: "Good", score: 80, aff: 10,
+                        feedback: "감정을 명확히 잘 읽어주는 공감 대사입니다."
+                    },
+                    {
+                        text: "다음 시험에 잘 보면 되지. 이번 시험 난이도가 원래 높았잖아.",
+                        grade: "Neutral", score: 50, aff: 0,
+                        feedback: "섣부른 해결책 제시는 지금 당장 슬픈 친구에게 위로가 되기 어렵습니다."
+                    },
+                    {
+                        text: "그냥 잊어버려. 계속 화내봤자 너만 손해야.",
+                        grade: "Poor", score: 20, aff: -10,
+                        feedback: "친구의 감정 표현을 억압하거나 무시하는 반응입니다."
+                    },
+                    {
+                        text: "네가 공부를 덜 했으니까 그렇지. 그리고 선생님이 왜 너를 미워해? 말도 안 되는 소리 마.",
+                        grade: "Bad", score: 0, aff: -20,
+                        feedback: "상대의 좌절감을 훈계와 논리적 비판으로 짓밟는 나쁜 대화입니다."
+                    }
+                ]
+            },
+            {
+                step: 2,
+                title: "심화: 자책과 포기",
+                dialog: "어차피 난 머리가 나쁜가 봐. 그냥 다 포기하고 학원도 그만둘래.",
+                emotion: "sad",
+                choices: [
+                    {
+                        text: "(고개를 끄덕이며) 모든 걸 놓아버리고 싶을 만큼 깊은 무기력감을 느끼고 있구나. 네가 얼마나 열심히 했는지 봤기에 네 절망감이 더 아프게 느껴져.",
+                        grade: "Perfect", score: 100, aff: 20,
+                        feedback: "상대의 언어적/비언어적 신호에 반응하며 깊은 경청과 따뜻한 공감을 보냈습니다."
+                    },
+                    {
+                        text: "포기하지 마. 옆에서 보면 너 진짜 노력했잖아.",
+                        grade: "Good", score: 80, aff: 10,
+                        feedback: "친구를 응원하는 긍정적이고 따뜻한 태도입니다."
+                    },
+                    {
+                        text: "학원 그만두면 나중에 후회할 텐데 잘 생각해 봐.",
+                        grade: "Neutral", score: 50, aff: 0,
+                        feedback: "이성적인 지적일 뿐 감정적 지지가 부족합니다."
+                    },
+                    {
+                        text: "지금 감정적이어서 그래. 며칠 쉬고 다시 생각해 봐.",
+                        grade: "Poor", score: 20, aff: -10,
+                        feedback: "친구의 상태를 단순 감정 기복으로 치부해 차단합니다."
+                    },
+                    {
+                        text: "겨우 시험 한 번 망쳤다고 포기한다고? 참 의지박약이다.",
+                        grade: "Bad", score: 0, aff: -20,
+                        feedback: "상대의 자존감을 깎아내리는 심각한 공격형 대사입니다."
+                    }
+                ]
+            },
+            {
+                step: 3,
+                title: "해소: 재기의 시작",
+                dialog: "너는 내가 다시 시작할 수 있을 거라고 생각해?",
+                emotion: "hopeful",
+                choices: [
+                    {
+                        text: "당연하지. 네가 얼마나 열정적인 친구인지 아니까, 오답 노트를 같이 정리하면서 차근차근 다시 해봤으면 좋겠어. 난 언제든 너를 도울 준비가 되어 있어.",
+                        grade: "Perfect", score: 100, aff: 20,
+                        feedback: "상대의 가능성을 지지하고 구체적인 조력 태도를 보여준 명확한 대사입니다."
+                    },
+                    {
+                        text: "당연하지! 넌 충분히 할 수 있어. 내가 도와줄게.",
+                        grade: "Good", score: 80, aff: 10,
+                        feedback: "자신감을 북돋아주는 용기 있는 대답입니다."
+                    },
+                    {
+                        text: "네가 마음먹기에 달렸지. 힘들면 쉬어가면서 해.",
+                        grade: "Neutral", score: 50, aff: 0,
+                        feedback: "원론적인 답변으로 힘을 보태주기에는 무난합니다."
+                    },
+                    {
+                        text: "글쎄, 네가 확신이 없으면 힘들 수도 있지.",
+                        grade: "Poor", score: 20, aff: -10,
+                        feedback: "불확실성을 더해 상대방의 불안을 자극합니다."
+                    },
+                    {
+                        text: "나한테 물어보지 말고 네 의지부터 다잡아.",
+                        grade: "Bad", score: 0, aff: -20,
+                        feedback: "도움을 청하는 친구를 밀쳐내는 냉담한 태도입니다."
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        id: 4,
+        genre: "스포츠/성장 영화",
+        title: "자책감과 사퇴 위기",
+        desc: "결정전 패배로 자책하는 주장 현우의 마음을 돌리고 팀의 짐을 함께 나누세요.",
+        npc: "현우",
+        color: "#10b981",
+        scenes: [
+            {
+                step: 1,
+                title: "발생: 결정전 패배",
+                dialog: "나 때문에 우리 팀이 패배했어... 내가 그냥 주장에서 사퇴하고 팀을 나가는 게 맞는 것 같아.",
+                emotion: "sad",
+                choices: [
+                    {
+                        text: "(어깨를 다독이며) 주장으로서 책임감이 커서 자책감이 훨씬 크게 느껴지는구나. 팀의 패배가 모두 네 탓처럼 느껴져서 많이 괴롭고 마음이 무겁겠어.",
+                        grade: "Perfect", score: 100, aff: 20,
+                        feedback: "비언어적 경청(다독임)과 상대의 책임감에 대한 깊은 반영적 공감 대사입니다."
+                    },
+                    {
+                        text: "너 때문에 패배한 거 아니야. 그렇게 자책하지 않았으면 좋겠어.",
+                        grade: "Good", score: 80, aff: 10,
+                        feedback: "위로의 뜻은 충분하나 상대의 자책감을 차분히 공감해 주는 과정이 빠졌습니다."
+                    },
+                    {
+                        text: "팀 사퇴 문제는 감독님이랑 부원들 다 같이 다루어야 할 문제야.",
+                        grade: "Neutral", score: 50, aff: 0,
+                        feedback: "절차적인 설명에 불과하여 주장의 마음을 어루만지지 못합니다."
+                    },
+                    {
+                        text: "지금 사퇴 얘기할 때가 아니잖아. 일단 부상 치료부터 해.",
+                        grade: "Poor", score: 20, aff: -10,
+                        feedback: "상대의 심각한 고민을 회피하거나 억누르는 답변입니다."
+                    },
+                    {
+                        text: "사퇴한다고 해결돼? 책임감 없이 도망치는 거야? 너 정말 이기적이다.",
+                        grade: "Bad", score: 0, aff: -20,
+                        feedback: "괴로워하는 주장을 이기적이라 단정 지으며 공격하는 비난조 형태입니다."
+                    }
+                ]
+            },
+            {
+                step: 2,
+                title: "심화: 팀원에 대한 오해",
+                dialog: "다들 속으로는 나를 원망하고 있잖아. 가식적으로 위로해 줄 필요 없어.",
+                emotion: "angry",
+                choices: [
+                    {
+                        text: "팀원들의 시선이 원망으로 느껴질 만큼 네 마음의 짐이 무겁다는 걸 알아. 하지만 부원들은 너를 비난하기 위해서가 아니라 너를 걱정해서 모인 거야.",
+                        grade: "Perfect", score: 100, aff: 20,
+                        feedback: "상대의 왜곡된 두려움을 이해해주면서도 진실된 오해 해소를 이끌어냅니다."
+                    },
+                    {
+                        text: "아무도 너 원망 안 해. 오해하지 마.",
+                        grade: "Good", score: 80, aff: 10,
+                        feedback: "단호한 위로이나 공감적 쿠션어가 조금 부족합니다."
+                    },
+                    {
+                        text: "다들 다음 경기를 준비하려고 모인 거니까 너무 민감하게 굴지 마.",
+                        grade: "Neutral", score: 50, aff: 0,
+                        feedback: "상대를 민감하다고 몰아세워 서운함을 유발할 수 있습니다."
+                    },
+                    {
+                        text: "그렇게 부정적으로만 생각하면 대화가 안 돼.",
+                        grade: "Poor", score: 20, aff: -10,
+                        feedback: "대화의 물꼬를 막는 피곤하다는 식의 대사입니다."
+                    },
+                    {
+                        text: "남들의 진심을 가식 취급하다니, 너 진짜 실망이다.",
+                        grade: "Bad", score: 0, aff: -20,
+                        feedback: "상대의 상처받은 마음을 비꼬며 비난을 쏟아냅니다."
+                    }
+                ]
+            },
+            {
+                step: 3,
+                title: "해소: 다시 주장이 되다",
+                dialog: "솔직히 다시 코트에 서는 게 너무 두려워... 내가 다시 잘 이끌 수 있을까?",
+                emotion: "anxious",
+                choices: [
+                    {
+                        text: "두려운 마음이 드는 건 당연해. 혼자 완벽한 주장이 되려 하지 말고, 부주장인 나와 짐을 나누어 짊어졌으면 좋겠어. 늘 네 곁에 있을게.",
+                        grade: "Perfect", score: 100, aff: 20,
+                        feedback: "불안감을 완벽히 정당화(공감)해 주고 동반자로서의 지원을 약속하는 최상의 대화입니다."
+                    },
+                    {
+                        text: "두려워하지 마. 우리가 옆에서 같이 뛰어줄게.",
+                        grade: "Good", score: 80, aff: 10,
+                        feedback: "든든하고 용기를 북돋워주는 대사입니다."
+                    },
+                    {
+                        text: "연습을 많이 하면 두려움은 자연스럽게 사라질 거야.",
+                        grade: "Neutral", score: 50, aff: 0,
+                        feedback: "지나치게 정석적인 지적으로 감정 수용이 생략되었습니다."
+                    },
+                    {
+                        text: "시간이 해결해 줄 테니까 차차 생각해 봐.",
+                        grade: "Poor", score: 20, aff: -10,
+                        feedback: "문제를 시간 뒤로 미루는 미온적 태도입니다."
+                    },
+                    {
+                        text: "주장이 겁부터 먹어서 어떡하냐? 정신 좀 차려.",
+                        grade: "Bad", score: 0, aff: -20,
+                        feedback: "솔직한 고백을 한 상대를 윽박지르고 모욕하는 대사입니다."
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        id: 5,
+        genre: "재난/액션 영화",
+        title: "위기 속의 대립과 협력",
+        desc: "긴박한 과제 현장에서 시우와의 무리한 고집을 꺾고 협력의 신뢰를 쌓으세요.",
+        npc: "시우",
+        color: "#8b5cf6",
+        scenes: [
+            {
+                step: 1,
+                title: "발생: 작전의 분열",
+                dialog: "네 고집 때문에 우리 팀 전체가 위험해질 뻔했잖아! 왜 매번 네 마음대로만 해?",
+                emotion: "angry",
+                choices: [
+                    {
+                        text: "우선 내 행동 때문에 크게 위험하다고 느껴서 정말 놀라고 화가 났겠네. 하지만 내 의도를 들어보지도 않고 화부터 내면(행동) 오해가 생겨서(영향) 나도 억울하고 속상해(감정). 차분하게 생각을 나눠봤으면 해(바라는 점).",
+                        grade: "Perfect", score: 100, aff: 20,
+                        feedback: "상대의 놀란 마음을 공감적 경청으로 받아준 후, 완벽한 나-전달법 4요소로 상황을 대화로 전환했습니다."
+                    },
+                    {
+                        text: "네가 왜 화났는지는 알겠어. 그래도 일방적으로 고집쟁이라고 하면 속상하니까 대화로 풀자.",
+                        grade: "Good", score: 80, aff: 10,
+                        feedback: "공감과 솔직한 감정 표현이 잘 어우러진 좋은 대화입니다."
+                    },
+                    {
+                        text: "일단 상황부터 수습하자. 싸우는 건 나중에 해.",
+                        grade: "Neutral", score: 50, aff: 0,
+                        feedback: "일의 효율성만 중시하여 갈등 원인을 뒤로 밀어둡니다."
+                    },
+                    {
+                        text: "알았어, 다 내 잘못이라고 치자. 이제 됐지?",
+                        grade: "Poor", score: 20, aff: -10,
+                        feedback: "진정성 없는 수용으로 상대의 화를 유발하는 회피형 반응입니다."
+                    },
+                    {
+                        text: "내가 고집 피웠다고? 너야말로 매번 내 말은 듣지도 않고 시비잖아!",
+                        grade: "Bad", score: 0, aff: -20,
+                        feedback: "맞대응으로 상대를 공격하는 최악의 너-전달법 대사입니다."
+                    }
+                ]
+            },
+            {
+                step: 2,
+                title: "심화: 독단과 개인플레이",
+                dialog: "네 방식은 너무 위험해. 내 플랜대로 따라오지 않을 거면 난 따로 움직이겠어.",
+                emotion: "demanding",
+                choices: [
+                    {
+                        text: "내 방식이 위험해 보여서 불안한 마음이 드는구나. 하지만 독단적으로 행동하면(행동) 팀 전체의 안전이 흔들려서(영향) 걱정스럽고 불안해(감정). 두 방안의 장점을 섞은 타협점을 함께 찾아보자(바라는 점).",
+                        grade: "Perfect", score: 100, aff: 20,
+                        feedback: "불안한 감정 반영 + 나-전달법 4요소 조합으로 중재책을 성공적으로 도출했습니다."
+                    },
+                    {
+                        text: "따로 움직이는 건 위험해. 네 불안함도 이해하니까 중재안을 찾자.",
+                        grade: "Good", score: 80, aff: 10,
+                        feedback: "합리적인 대안을 모색하는 수용적 대화입니다."
+                    },
+                    {
+                        text: "따로 움직이면 성공 확률이 떨어져. 규칙대로 하자.",
+                        grade: "Neutral", score: 50, aff: 0,
+                        feedback: "규칙과 성공률만 강조해 감정적 반발을 살 수 있습니다."
+                    },
+                    {
+                        text: "네 마음대로 해. 나도 더는 강요 안 할게.",
+                        grade: "Poor", score: 20, aff: -10,
+                        feedback: "협력을 포기하는 방관적 태도입니다."
+                    },
+                    {
+                        text: "너 진짜 이기적이구나. 항상 네 마음대로만 해야 직성이 풀리지?",
+                        grade: "Bad", score: 0, aff: -20,
+                        feedback: "상대의 성격을 이기적이라고 낙인찍는 감정적 인격 모독 대사입니다."
+                    }
+                ]
+            },
+            {
+                step: 3,
+                title: "해소: 완벽한 임무 성공",
+                dialog: "아까는 내가 너무 거칠게 말해서 미안했어... 덕분에 무사히 끝났다.",
+                emotion: "hopeful",
+                choices: [
+                    {
+                        text: "(웃으며 손을 잡고) 위급한 상황이라 서로 예민해졌던 거니 괜찮아. 솔직하게 먼저 미안하다고 말해줘서 고맙고, 이번 일을 계기로 서로를 더 신뢰할 수 있게 된 것 같아 기뻐.",
+                        grade: "Perfect", score: 100, aff: 20,
+                        feedback: "사과를 온전히 받아들여 유대감을 크게 확장하는 모범적 반응입니다."
+                    },
+                    {
+                        text: "나도 아까 화내서 미안했어. 무사히 끝나서 다행이다!",
+                        grade: "Good", score: 80, aff: 10,
+                        feedback: "서로 사과하며 온화하게 수용하는 대화입니다."
+                    },
+                    {
+                        text: "결과가 좋았으니 됐어. 다음에도 잘해보자.",
+                        grade: "Neutral", score: 50, aff: 0,
+                        feedback: "결과 중심의 덤덤한 반응입니다."
+                    },
+                    {
+                        text: "응, 다음부터는 서로 좀 조심하자.",
+                        grade: "Poor", score: 20, aff: -10,
+                        feedback: "상대의 용기 있는 사과에 조금은 인색한 답변입니다."
+                    },
+                    {
+                        text: "미안한 줄은 아네. 다음부터는 내 말 좀 들어.",
+                        grade: "Bad", score: 0, aff: -20,
+                        feedback: "상대의 사과를 교만하게 받아치며 불필요한 우월감을 나타냅니다."
+                    }
+                ]
+            }
+        ]
+    }
+];
+
+// 3. Game Manager & State
+class SimulationApp {
+    constructor() {
+        this.currentEpIndex = 0;
+        this.currentSceneIndex = 0;
+        this.score = 0;
+        this.affection = 50;
+        this.history = JSON.parse(this.loadData('comm_quest_history') || '[]');
+
+        this.initCanvas();
+        this.renderEpisodeList();
+        this.bindEvents();
+    }
+
+    loadData(key) {
+        try { return localStorage.getItem(key); }
+        catch(e) { return null; }
+    }
+
+    saveData(key, value) {
+        try { localStorage.setItem(key, value); }
+        catch(e) { console.warn('Storage failed', e); }
+    }
+
+    bindEvents() {
+        document.getElementById('soundToggleBtn').addEventListener('click', () => {
+            audio.muted = !audio.muted;
+            document.getElementById('soundToggleBtn').innerText = audio.muted ? '🔇' : '🔊';
+        });
+
+        document.getElementById('historyBtn').addEventListener('click', () => this.openHistoryModal());
+        document.getElementById('homeBtn').addEventListener('click', () => this.showView('titleView'));
+    }
+
+    showView(viewId) {
+        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+        document.getElementById(viewId).classList.add('active');
+    }
+
+    renderEpisodeList() {
+        const grid = document.getElementById('episodeGrid');
+        grid.innerHTML = '';
+        episodesData.forEach((ep, idx) => {
+            const card = document.createElement('div');
+            card.className = 'ep-card';
+            card.onclick = () => this.startEpisode(idx);
+            card.innerHTML = `
+                <div>
+                    <span class="ep-badge" style="background: ${ep.color}22; color: ${ep.color};">Ep ${ep.id} • ${ep.genre}</span>
+                    <h3 class="ep-title" style="margin-top: 8px;">${ep.title}</h3>
+                    <p class="ep-desc" style="margin-top: 6px;">${ep.desc}</p>
+                </div>
+                <div class="ep-footer">
+                    <span>등장인물: ${ep.npc}</span>
+                    <span style="color: var(--primary); font-weight: 700;">시작 ▶</span>
+                </div>
+            `;
+            grid.appendChild(card);
+        });
+    }
+
+    startEpisode(epIdx) {
+        this.currentEpIndex = epIdx;
+        this.currentSceneIndex = 0;
+        this.score = 0;
+        this.affection = 60; // 초기 기본 호감도
+        this.showView('simView');
+        this.loadScene();
+    }
+
+    loadScene() {
+        const ep = episodesData[this.currentEpIndex];
+        const scene = ep.scenes[this.currentSceneIndex];
+
+        document.getElementById('simEpTitle').innerText = `Ep ${ep.id}. ${ep.title}`;
+        document.getElementById('simSceneStep').innerText = `Scene ${scene.step}/3 (${scene.title})`;
+        
+        this.updateAffectionUI();
+
+        document.getElementById('speakerName').innerText = ep.npc;
+        document.getElementById('speakerDialog').innerText = `"${scene.dialog}"`;
+
+        // Render Canvas Avatar
+        this.drawAvatar(ep.npc, scene.emotion, ep.color);
+
+        // Render Choices
+        const choicesContainer = document.getElementById('choicesContainer');
+        choicesContainer.innerHTML = '';
+
+        scene.choices.forEach((choice, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'choice-btn';
+            btn.onclick = () => this.selectChoice(choice);
+            btn.innerHTML = `
+                <div class="choice-num">${idx + 1}</div>
+                <div>${choice.text}</div>
+            `;
+            choicesContainer.appendChild(btn);
+        });
+    }
+
+    updateAffectionUI() {
+        const fill = document.getElementById('affectionFill');
+        const text = document.getElementById('affectionText');
+        const clamped = Math.max(0, Math.min(100, this.affection));
+        fill.style.width = `${clamped}%`;
+        text.innerText = clamped;
+    }
+
+    initCanvas() {
+        this.canvas = document.getElementById('avatarCanvas');
+        this.ctx = this.canvas.getContext('2d');
+        this.resizeCanvas();
+        window.addEventListener('resize', () => this.resizeCanvas());
+    }
+
+    resizeCanvas() {
+        if (!this.canvas) return;
+        this.canvas.width = this.canvas.parentElement.clientWidth;
+        this.canvas.height = this.canvas.parentElement.clientHeight;
+        if (episodesData[this.currentEpIndex]) {
+            const ep = episodesData[this.currentEpIndex];
+            const scene = ep.scenes[this.currentSceneIndex] || ep.scenes[0];
+            this.drawAvatar(ep.npc, scene.emotion, ep.color);
+        }
+    }
+
+    drawAvatar(name, emotion, themeColor) {
+        if (!this.ctx) return;
+        const w = this.canvas.width;
+        const h = this.canvas.height;
+        const ctx = this.ctx;
+
+        ctx.clearRect(0, 0, w, h);
+
+        // Background Gradient
+        const bgGrad = ctx.createLinearGradient(0, 0, 0, h);
+        bgGrad.addColorStop(0, '#1e293b');
+        bgGrad.addColorStop(1, '#0f172a');
+        ctx.fillStyle = bgGrad;
+        ctx.fillRect(0, 0, w, h);
+
+        // Grid Light Effects
+        ctx.strokeStyle = 'rgba(255,255,255,0.03)';
+        ctx.lineWidth = 1;
+        for (let x = 0; x < w; x += 30) {
+            ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
+        }
+
+        // Draw Character Shape
+        const cx = w / 2;
+        const cy = h / 2 - 10;
+
+        // Aura
+        const auraGrad = ctx.createRadialGradient(cx, cy, 10, cx, cy, 90);
+        auraGrad.addColorStop(0, themeColor + '66');
+        auraGrad.addColorStop(1, 'transparent');
+        ctx.fillStyle = auraGrad;
+        ctx.beginPath();
+        ctx.arc(cx, cy, 90, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Head
+        ctx.fillStyle = '#fde047';
+        ctx.beginPath();
+        ctx.arc(cx, cy, 45, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Eyes based on Emotion
+        ctx.fillStyle = '#0f172a';
+        if (emotion === 'angry') {
+            // Angry Eyes
+            ctx.beginPath();
+            ctx.moveTo(cx - 20, cy - 10); ctx.lineTo(cx - 5, cy - 2); ctx.lineWidth = 4; ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(cx + 20, cy - 10); ctx.lineTo(cx + 5, cy - 2); ctx.stroke();
+        } else if (emotion === 'sad') {
+            // Sad Eyes
+            ctx.beginPath(); ctx.arc(cx - 15, cy - 5, 4, 0, Math.PI * 2); ctx.fill();
+            ctx.beginPath(); ctx.arc(cx + 15, cy - 5, 4, 0, Math.PI * 2); ctx.fill();
+            ctx.strokeStyle = '#38bdf8'; ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.moveTo(cx - 18, cy); ctx.lineTo(cx - 18, cy + 10); ctx.stroke(); // Tear
+        } else if (emotion === 'hopeful') {
+            // Happy Eyes
+            ctx.strokeStyle = '#0f172a'; ctx.lineWidth = 3;
+            ctx.beginPath(); ctx.arc(cx - 15, cy - 5, 6, Math.PI, 0); ctx.stroke();
+            ctx.beginPath(); ctx.arc(cx + 15, cy - 5, 6, Math.PI, 0); ctx.stroke();
+        } else {
+            // Normal Eyes
+            ctx.beginPath(); ctx.arc(cx - 15, cy - 5, 5, 0, Math.PI * 2); ctx.fill();
+            ctx.beginPath(); ctx.arc(cx + 15, cy - 5, 5, 0, Math.PI * 2); ctx.fill();
+        }
+
+        // Mouth based on Emotion
+        ctx.strokeStyle = '#0f172a';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        if (emotion === 'angry' || emotion === 'sad') {
+            ctx.arc(cx, cy + 22, 12, Math.PI, 0); // Frown
+        } else if (emotion === 'hopeful') {
+            ctx.arc(cx, cy + 12, 14, 0, Math.PI); // Smile
+        } else {
+            ctx.moveTo(cx - 10, cy + 15); ctx.lineTo(cx + 10, cy + 15); // Flat
+        }
+        ctx.stroke();
+    }
+
+    selectChoice(choice) {
+        this.score += choice.score;
+        this.affection += choice.aff;
+
+        if (choice.score >= 80) audio.playSuccess();
+        else audio.playBad();
+
+        // Update Modal UI
+        const modal = document.getElementById('feedbackModal');
+        const ratingTag = document.getElementById('ratingTag');
+        ratingTag.className = `rating-tag rating-${choice.grade}`;
+        ratingTag.innerText = choice.grade;
+
+        const affSign = choice.aff >= 0 ? `+${choice.aff}` : `${choice.aff}`;
+        document.getElementById('scoreChangeText').innerText = `획득 점수: +${choice.score}점 / 호감도 변화: ${affSign}`;
+        document.getElementById('feedbackBody').innerText = choice.feedback;
+
+        modal.classList.add('active');
+    }
+
+    nextScene() {
+        document.getElementById('feedbackModal').classList.remove('active');
+        const ep = episodesData[this.currentEpIndex];
+        
+        this.currentSceneIndex++;
+        if (this.currentSceneIndex < ep.scenes.length) {
+            this.loadScene();
+        } else {
+            this.finishEpisode();
+        }
+    }
+
+    finishEpisode() {
+        const ep = episodesData[this.currentEpIndex];
+        const isSuccess = this.affection >= 70;
+
+        document.getElementById('endingBadge').innerText = isSuccess ? '🏆' : '💔';
+        document.getElementById('endingTitle').innerText = isSuccess ? '관계 회복 성공!' : '관계 소원해짐...';
+        document.getElementById('endingDesc').innerText = isSuccess 
+            ? `'${ep.npc}'와의 갈등을 공감과 나-전달법으로 해소하여 유대감을 키웠습니다.`
+            : `오해가 지속되어 관계가 멀어졌습니다. 대화법을 재검토하고 다시 도전해 보세요.`;
+
+        document.getElementById('finalScore').innerText = `${this.score} / 300점`;
+        document.getElementById('finalAffection').innerText = `${this.affection}점`;
+
+        // Record history
+        const record = {
+            date: new Date().toLocaleDateString('ko-KR'),
+            epTitle: ep.title,
+            score: this.score,
+            affection: this.affection,
+            success: isSuccess
+        };
+        this.history.unshift(record);
+        this.saveData('comm_quest_history', JSON.stringify(this.history));
+
+        this.showView('resultView');
+    }
+
+    restartEpisode() {
+        this.startEpisode(this.currentEpIndex);
+    }
+
+    openGuideModal() {
+        document.getElementById('guideModal').classList.add('active');
+    }
+
+    openHistoryModal() {
+        const container = document.getElementById('historyContainer');
+        container.innerHTML = '';
+
+        if (this.history.length === 0) {
+            container.innerHTML = '<p style="color: var(--text-muted); text-align:center;">아직 완료한 학습 기록이 없습니다.</p>';
+        } else {
+            this.history.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'history-item';
+                div.innerHTML = `
+                    <div>
+                        <strong style="color: var(--text-light);">${item.epTitle}</strong>
+                        <div style="font-size:0.75rem; color: var(--text-muted);">${item.date}</div>
+                    </div>
+                    <div style="text-align: right;">
+                        <span style="color: ${item.success ? 'var(--accent-green)' : 'var(--accent-red)'}; font-weight:700;">
+                            ${item.success ? '성공' : '재도전 필요'}
+                        </span>
+                        <div style="font-size:0.8rem;">${item.score}점 (호감도 ${item.affection})</div>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+        document.getElementById('historyModal').classList.add('active');
+    }
+}
+
+let app;
+window.onload = () => {
+    app = new SimulationApp();
+};
+</script>
+</body>
+</html>
